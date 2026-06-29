@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNEMI ChatBot Virtual</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@700;800&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --purple:#5b21b6;--purple2:#7c3aed;--purple3:#a78bfa;--purple4:#ede9fe;
+  --pink:#db2777;--pink2:#f472b6;--pink3:#fce7f3;
+  --orange:#ea580c;--orange2:#fb923c;--orange3:#fff7ed;
+  --cyan:#0891b2;--cyan2:#22d3ee;--cyan3:#ecfeff;
+  --green:#16a34a;--green2:#4ade80;
+  --bg:linear-gradient(135deg,#1e1b4b 0%,#312e81 40%,#4c1d95 100%);
+  --surface:#ffffff;--surface2:#f5f3ff;
+  --text:#1e1b4b;--muted:#6b7280;--border:#ddd6fe;
+  --r:20px;--rs:12px;
+}
+
+body{
+  font-family:'Inter',sans-serif;
+  background:linear-gradient(135deg,#1e1b4b 0%,#312e81 40%,#4c1d95 100%);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+}
+
+/* ── HEADER ── */
+.hdr{
+  width:100%;
+  background:linear-gradient(90deg,#1e1b4b,#4c1d95,#7c3aed);
+  padding:12px 20px;display:flex;align-items:center;gap:14px;
+  box-shadow:0 4px 24px rgba(91,33,182,.5);
+  position:relative;overflow:hidden;
+}
+.hdr::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(167,139,250,.15),transparent);
+  animation:shimmer 3s infinite;
+}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* SVG LOGO */
+.hdr-logo{width:54px;height:54px;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(167,139,250,.7))}
+.logo-cap{animation:capBounce 2.5s ease-in-out infinite}
+.logo-star1{animation:twinkle 1.8s ease-in-out infinite}
+.logo-star2{animation:twinkle 1.8s ease-in-out infinite .6s}
+.logo-star3{animation:twinkle 1.8s ease-in-out infinite 1.2s}
+.logo-book{animation:bookWiggle 3s ease-in-out infinite}
+@keyframes capBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes twinkle{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+@keyframes bookWiggle{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+
+.hdr-info{z-index:1}
+.hdr-info h1{font-family:'Sora',sans-serif;font-size:17px;color:#fff;font-weight:800;letter-spacing:.3px;text-shadow:0 0 20px rgba(167,139,250,.5)}
+.hdr-info p{font-size:11px;color:#c4b5fd;margin-top:3px;font-weight:500}
+.dot{width:7px;height:7px;background:#4ade80;border-radius:50%;display:inline-block;margin-right:5px;box-shadow:0 0 6px #4ade80;animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{box-shadow:0 0 6px #4ade80}50%{box-shadow:0 0 14px #4ade80,0 0 24px #4ade80}}
+
+/* ── BREADCRUMB ── */
+.breadcrumb{
+  width:100%;max-width:720px;padding:8px 16px 0;
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+}
+.bc-item{font-size:11px;color:#c4b5fd;cursor:pointer;padding:3px 10px;border-radius:10px;transition:all .15s;font-weight:500}
+.bc-item:hover{background:rgba(167,139,250,.25);color:#fff}
+.bc-sep{font-size:11px;color:#7c3aed}
+.bc-current{font-size:11px;color:#a78bfa;font-weight:700;background:rgba(167,139,250,.18);padding:3px 10px;border-radius:10px;border:1px solid rgba(167,139,250,.3)}
+.reset-btn{margin-left:auto;background:rgba(255,255,255,.08);border:1px solid rgba(167,139,250,.4);border-radius:14px;padding:4px 12px;font-size:11px;color:#c4b5fd;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;font-weight:500}
+.reset-btn:hover{background:rgba(167,139,250,.25);color:#fff;border-color:#a78bfa}
+
+/* ── CHAT WRAP ── */
+.chat-wrap{width:100%;max-width:720px;flex:1;display:flex;flex-direction:column}
+.messages{
+  flex:1;padding:18px 16px 10px;display:flex;flex-direction:column;gap:12px;
+  min-height:380px;max-height:500px;overflow-y:auto;scroll-behavior:smooth;
+}
+.messages::-webkit-scrollbar{width:4px}
+.messages::-webkit-scrollbar-track{background:transparent}
+.messages::-webkit-scrollbar-thumb{background:rgba(167,139,250,.4);border-radius:4px}
+
+/* ── BUBBLES BOT ── */
+.msg-bot{display:flex;align-items:flex-end;gap:10px;animation:fu .24s ease}
+.b-av{
+  width:34px;height:34px;flex-shrink:0;border-radius:50%;overflow:hidden;
+  background:linear-gradient(135deg,#7c3aed,#db2777);
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+  box-shadow:0 0 12px rgba(124,58,237,.6);
+}
+.bubble-bot{
+  background:linear-gradient(135deg,#312e81,#4c1d95);
+  color:#fff;border-radius:var(--r) var(--r) var(--r) 4px;
+  padding:12px 17px;max-width:84%;font-size:13.5px;line-height:1.6;
+  box-shadow:0 4px 20px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.1);
+  border:1px solid rgba(167,139,250,.25);
+}
+.bubble-bot strong{color:#fbbf24}
+.bubble-bot ul{padding-left:18px;margin-top:7px}
+.bubble-bot li{margin-bottom:4px;font-size:13px}
+.bubble-bot ol{padding-left:18px;margin-top:7px}
+
+/* ── BUBBLES USER ── */
+.msg-user{display:flex;justify-content:flex-end;animation:fu .18s ease}
+.bubble-user{
+  background:linear-gradient(135deg,#db2777,#ea580c);
+  color:#fff;border-radius:var(--r) var(--r) 4px var(--r);
+  padding:11px 16px;max-width:76%;font-size:13.5px;font-weight:600;
+  box-shadow:0 4px 20px rgba(219,39,119,.4);
+  border:1px solid rgba(255,255,255,.15);
+}
+
+/* ── QUICK REPLIES ── */
+.qrs{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0 5px 44px;animation:fu .3s ease}
+.qr{
+  background:rgba(255,255,255,.07);color:#e9d5ff;
+  border:1.5px solid rgba(167,139,250,.45);
+  border-radius:22px;padding:6px 15px;font-size:12.5px;font-weight:600;
+  cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;
+  backdrop-filter:blur(4px);
+}
+.qr:hover{
+  background:linear-gradient(135deg,#7c3aed,#db2777);
+  color:#fff;border-color:transparent;
+  box-shadow:0 4px 16px rgba(124,58,237,.5);
+  transform:translateY(-1px);
+}
+
+/* ── TYPING ── */
+.typing{display:flex;align-items:flex-end;gap:10px}
+.tdots{
+  background:linear-gradient(135deg,#312e81,#4c1d95);
+  border-radius:var(--r) var(--r) var(--r) 4px;
+  padding:12px 17px;display:flex;gap:6px;align-items:center;
+  border:1px solid rgba(167,139,250,.25);
+}
+.td{width:7px;height:7px;background:#a78bfa;border-radius:50%;opacity:.4;animation:bl 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+
+/* ── INPUT ── */
+.input-area{
+  background:rgba(255,255,255,.06);
+  border-top:1.5px solid rgba(167,139,250,.25);
+  backdrop-filter:blur(12px);
+  padding:12px 16px;display:flex;gap:10px;align-items:center;
+  width:100%;max-width:720px;
+}
+.input-area input{
+  flex:1;border:1.5px solid rgba(167,139,250,.35);border-radius:24px;
+  padding:10px 18px;font-size:13.5px;font-family:'Inter',sans-serif;
+  color:#fff;background:rgba(255,255,255,.08);outline:none;
+  transition:all .2s;
+}
+.input-area input::placeholder{color:rgba(196,181,253,.6)}
+.input-area input:focus{border-color:#a78bfa;background:rgba(167,139,250,.15);box-shadow:0 0 0 3px rgba(167,139,250,.15)}
+.send-btn{
+  width:44px;height:44px;
+  background:linear-gradient(135deg,#7c3aed,#db2777);
+  border:none;border-radius:50%;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0;
+  box-shadow:0 4px 14px rgba(124,58,237,.5);
+}
+.send-btn:hover{transform:scale(1.1);box-shadow:0 6px 20px rgba(124,58,237,.7)}
+.send-btn svg{width:18px;height:18px;fill:#fff}
+
+/* ── ANIMATIONS ── */
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bl{0%,80%,100%{opacity:.15}40%{opacity:1}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <!-- SVG LOGO UNEMI animado -->
+  <svg class="hdr-logo" viewBox="0 0 54 54" xmlns="http://www.w3.org/2000/svg">
+    <!-- Fondo circular degradado -->
+    <defs>
+      <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#7c3aed"/>
+        <stop offset="100%" stop-color="#1e1b4b"/>
+      </radialGradient>
+      <linearGradient id="capGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fbbf24"/>
+        <stop offset="100%" stop-color="#f59e0b"/>
+      </linearGradient>
+      <linearGradient id="bookGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#34d399"/>
+        <stop offset="100%" stop-color="#059669"/>
+      </linearGradient>
+    </defs>
+    <circle cx="27" cy="27" r="27" fill="url(#bgGrad)"/>
+    <circle cx="27" cy="27" r="26" fill="none" stroke="rgba(167,139,250,0.5)" stroke-width="1"/>
+    <!-- Libro base -->
+    <g class="logo-book">
+      <rect x="12" y="30" width="30" height="3" rx="1.5" fill="url(#bookGrad)"/>
+      <rect x="14" y="25" width="11" height="7" rx="1" fill="#6ee7b7"/>
+      <rect x="27" y="25" width="11" height="7" rx="1" fill="#34d399"/>
+      <rect x="26.5" y="24.5" width="1" height="8" rx=".5" fill="#fff" opacity=".8"/>
+    </g>
+    <!-- Birrete / gorra -->
+    <g class="logo-cap">
+      <ellipse cx="27" cy="19" rx="12" ry="3.5" fill="url(#capGrad)"/>
+      <rect x="23" y="15" width="8" height="4" rx="1" fill="#f59e0b"/>
+      <rect x="25.5" y="12" width="3" height="4" rx="1" fill="#fbbf24"/>
+      <rect x="26.5" y="10" width="1" height="3" fill="#fbbf24"/>
+      <circle cx="27" cy="10" r="1.5" fill="#fbbf24"/>
+      <!-- Cuerda del birrete -->
+      <path d="M33 19.5 Q38 21 37 26" stroke="#fbbf24" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <circle cx="37" cy="26.5" r="1.8" fill="#fbbf24"/>
+    </g>
+    <!-- Estrellas decorativas -->
+    <g class="logo-star1"><circle cx="8" cy="12" r="1.5" fill="#f472b6"/></g>
+    <g class="logo-star2"><circle cx="46" cy="10" r="1.2" fill="#22d3ee"/></g>
+    <g class="logo-star3"><circle cx="44" cy="38" r="1.5" fill="#fbbf24"/></g>
+    <!-- Letras U E -->
+    <text x="15" y="45" font-family="Sora,Arial" font-size="7" font-weight="800" fill="white" opacity=".9">UNEMI</text>
+  </svg>
+
+  <div class="hdr-info">
+    <h1>✨ MILI — ChatBot UNEMI</h1>
+    <p><span class="dot"></span>Asistente de Admisiones e Información Institucional</p>
+  </div>
+</div>
+
+<div class="breadcrumb" id="breadcrumb">
+  <button class="reset-btn" onclick="resetChat()">↺ Reiniciar</button>
+</div>
+
+<div class="chat-wrap">
+  <div class="messages" id="messages"></div>
+  <div class="input-area">
+    <input type="text" id="userInput" placeholder="Escribe tu pregunta aquí..." onkeydown="if(event.key==='Enter')sendMsg()">
+    <button class="send-btn" onclick="sendMsg()">
+      <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+const DATA = {
+  menuPrincipal: ["🏛️ Universidad","📚 Oferta Académica","📝 Admisiones","🎓 Becas","📖 Cursos Gratuitos","📞 Contacto","👤 Hablar con Asesor"],
+
+  universidad: {
+    intro: "La <strong>Universidad Estatal de Milagro (UNEMI)</strong> es una institución pública de educación superior ubicada en Milagro, Ecuador. ¿Qué información deseas conocer?",
+    opciones: ["🎯 Misión","🔭 Visión","🏫 Facultades","📍 Sedes","🛎️ Servicios"],
+    mision: "La UNEMI forma profesionales íntegros con pensamiento crítico, comprometidos con el desarrollo sostenible de la sociedad ecuatoriana mediante educación de calidad, investigación e innovación.",
+    vision: "Ser una universidad líder en el Ecuador, reconocida por su excelencia académica, investigación científica y vinculación con la comunidad para el año 2030.",
+    facultades: "<strong>Facultades de la Universidad:</strong><ul><li>🏛️ Ciencias Administrativas</li><li>🔧 Ingeniería</li><li>❤️ Ciencias de la Salud</li><li>🌐 Ciencias Sociales</li><li>📖 Educación</li><li>💻 Tecnologías de la Información</li></ul>",
+    sedes: "La UNEMI cuenta con su <strong>campus principal en Milagro</strong> y extensiones en otras ciudades de la provincia del Guayas. Contáctanos para información actualizada sobre sedes.",
+    servicios: "<strong>Servicios disponibles:</strong><ul><li>Campus Virtual (aula en línea)</li><li>Biblioteca digital</li><li>Bienestar estudiantil</li><li>Servicio médico</li><li>Deportes y cultura</li><li>Vinculación con la colectividad</li><li>Bolsa de empleo</li></ul>"
+  },
+
+  ofertaNiveles: ["🎓 Tercer Nivel","🏅 Cuarto Nivel","🔬 Doctorado","📚 Educación Continua"],
+
+  facultadesLista: ["🔧 Ingeniería","📖 Educación","❤️ Salud","🌐 Ciencias Sociales","⚖️ Derecho","💼 Administración","🏗️ Arquitectura","📡 Comunicación","🎨 Artes","💻 Tecnologías"],
+
+  carreras: {
+    "Ingeniería": {lista:["Ingeniería Civil","Ingeniería Industrial","Ingeniería en Sistemas","Ingeniería Ambiental","Ingeniería Mecánica"],dur:"5 años",modal:"Presencial / Semipresencial",costo:"Gratuita (pública)"},
+    "Educación": {lista:["Educación Básica","Educación Inicial","Pedagogía","Educación Física","Educación Especial","Psicopedagogía","Idiomas"],dur:"4 años",modal:"Presencial / En línea",costo:"Gratuita (pública)"},
+    "Salud": {lista:["Medicina","Enfermería","Odontología","Nutrición y Dietética","Terapia Física"],dur:"5-6 años",modal:"Presencial",costo:"Gratuita (pública)"},
+    "Ciencias Sociales": {lista:["Trabajo Social","Psicología","Sociología","Economía"],dur:"4-5 años",modal:"Presencial / Semipresencial",costo:"Gratuita (pública)"},
+    "Derecho": {lista:["Derecho","Criminología"],dur:"5 años",modal:"Presencial / Nocturna",costo:"Gratuita (pública)"},
+    "Administración": {lista:["Administración de Empresas","Contabilidad y Auditoría","Marketing","Comercio Exterior","Finanzas"],dur:"4 años",modal:"Presencial / Semipresencial",costo:"Gratuita (pública)"},
+    "Arquitectura": {lista:["Arquitectura","Diseño de Interiores"],dur:"5 años",modal:"Presencial",costo:"Gratuita (pública)"},
+    "Comunicación": {lista:["Comunicación Social","Periodismo","Producción Audiovisual"],dur:"4 años",modal:"Presencial",costo:"Gratuita (pública)"},
+    "Artes": {lista:["Artes Plásticas","Música","Danza","Teatro"],dur:"4 años",modal:"Presencial",costo:"Gratuita (pública)"},
+    "Tecnologías": {lista:["Tecnología en Sistemas","Tecnología en Redes","Tecnología Industrial","Tecnología en Electrónica"],dur:"3 años",modal:"Presencial / Semipresencial",costo:"Gratuita (pública)"},
+  },
+
+  cuartoNivel: "<strong>Programas de Cuarto Nivel (Posgrado):</strong><ul><li>📜 <strong>Especializaciones:</strong> Gestión Pública</li><li>🏅 <strong>Maestrías:</strong> Maestría en Educación, Maestría en Administración de Empresas (MBA), Maestría en Ingeniería</li><li>🔬 <strong>Doctorados:</strong> Doctorado en Educación, Doctorado en Ciencias</li></ul>Para más información visita: <strong>posgrados.unemi.edu.ec</strong>",
+
+  doctorado: "La UNEMI desarrolla programas de <strong>Doctorado (PhD)</strong> en alianza con universidades nacionales e internacionales. Contáctanos para conocer la oferta actualizada: <strong>investigacion@unemi.edu.ec</strong>",
+
+  educacionContinua: "<strong>Educación Continua y Cursos Gratuitos:</strong><ul><li>Cursos en línea abiertos (MOOCs)</li><li>Talleres de actualización profesional</li><li>Diplomados cortos</li><li>Certificaciones en competencias digitales</li><li>Programas de vinculación comunitaria</li></ul>Accede en: <strong>educacioncontinua.unemi.edu.ec</strong>",
+
+  admisiones: {
+    intro: "Te guío con el proceso de admisión. ¿Qué necesitas saber?",
+    opciones: ["📋 Requisitos de ingreso","📝 Proceso de inscripción","🎓 Proceso de matrícula","📜 Proceso de titulación","📄 Documentos necesarios","🎓 Requisitos para Maestría","💻 Campus Virtual"],
+    requisitos: "<strong>Requisitos para matricularse:</strong><ul><li>📄 Cédula de identidad o pasaporte</li><li>📜 Título de bachiller registrado en el SENESCYT</li><li>🗳️ Certificado de votación (si aplica)</li><li>📷 Fotografía actualizada tamaño carné</li><li>💳 Comprobante de pago (cuando corresponda)</li><li>✅ Puntaje en el examen SENESCYT (para tercer nivel)</li></ul>",
+    inscripcion: "<strong>Proceso de inscripción:</strong><ol><li>Regístrate en <strong>admision.unemi.edu.ec</strong></li><li>Completa el formulario con tus datos</li><li>Sube los documentos solicitados</li><li>Selecciona carrera y modalidad</li><li>Espera confirmación por correo electrónico</li></ol>",
+    matricula: "<strong>Proceso de matrícula:</strong><ol><li>Recibe notificación de admisión</li><li>Ingresa al portal estudiantil</li><li>Selecciona materias del período</li><li>Confirma tu matrícula</li><li>Recibe credenciales del campus virtual</li></ol>",
+    titulacion: "<strong>Proceso de titulación:</strong><ol><li>Aprobar todas las asignaturas de la malla curricular</li><li>Cumplir las prácticas preprofesionales o vinculación con la comunidad</li><li>Aprobar la modalidad de titulación seleccionada</li><li>Entregar la documentación requerida por secretaría</li><li>Registro del título en el SENESCYT</li></ol>",
+    documentos: "<strong>Documentos requeridos:</strong><ul><li>Cédula de identidad (copia)</li><li>Título de bachiller registrado en SENESCYT</li><li>Foto tamaño carné</li><li>Récord de notas del bachillerato</li><li>Para posgrado: título universitario registrado</li></ul>",
+    maestria: "<strong>Requisitos para estudiar una Maestría:</strong><ul><li>🎓 Título universitario de tercer nivel registrado en el SENESCYT</li><li>📄 Documentos personales (cédula, pasaporte)</li><li>📝 Formulario de inscripción debidamente completado</li><li>🗣️ Entrevista académica (cuando corresponda según el programa)</li></ul>Para más información: <strong>posgrados.unemi.edu.ec</strong>",
+    campusVirtual: "Para ingresar al <strong>Campus Virtual</strong>:<ol><li>Visita <strong>campusvirtual.unemi.edu.ec</strong></li><li>Ingresa con tu <strong>usuario y contraseña</strong> asignados al matricularte</li><li>Si olvidaste tu contraseña, usa la opción <em>\"¿Olvidé mi contraseña?\"</em> o contáctate con soporte técnico</li><li>Para soporte: <strong>tic@unemi.edu.ec</strong></li></ol>"
+  },
+
+  becas: "<strong>Becas y Ayudas Económicas:</strong><ul><li>🏆 <strong>Excelencia académica</strong> — promedio destacado</li><li>💛 <strong>Situación socioeconómica</strong> — necesidad comprobada</li><li>♿ <strong>Discapacidad</strong> — personas con carné de discapacidad</li><li>🏅 <strong>Alto rendimiento deportivo</strong> — atletas destacados</li><li>🌍 <strong>Convenios institucionales</strong> — acuerdos con entidades</li></ul>Para solicitar una beca debes completar la <strong>convocatoria correspondiente</strong> y presentar los documentos solicitados por <strong>Bienestar Universitario</strong>.<br><br>📧 Contacto: <strong>bienestar@unemi.edu.ec</strong>",
+
+  solicitudBeca: "Para solicitar una beca debes:<ol><li>Estar atento a las <strong>convocatorias oficiales</strong> publicadas por la universidad</li><li>Reunir los <strong>documentos solicitados</strong> según el tipo de beca</li><li>Presentar la solicitud ante <strong>Bienestar Universitario</strong></li><li>Esperar la resolución del comité evaluador</li></ol>📧 Contacto: <strong>bienestar@unemi.edu.ec</strong>",
+
+  contacto: "<strong>Información de Contacto UNEMI:</strong><ul><li>📍 Km 1.5 vía Milagro–Km 26, Milagro, Ecuador</li><li>📞 (04) 297-0881 / 297-0882</li><li>✉️ info@unemi.edu.ec</li><li>🌐 www.unemi.edu.ec</li><li>📱 WhatsApp: +593 99-XXX-XXXX</li><li>⏰ Atención: Lun–Vie 8:00–17:00</li></ul>",
+
+  asesor: "Un <strong>asesor académico</strong> se pondrá en contacto contigo. Por favor completa el formulario:\n\n¿Cuál es tu <strong>nombre completo</strong>?",
+
+  faqKeys: [
+    {keys:["facultades","facultad","tiene la universidad","cuántas facultades","cuales son las facultades"],ans:"La universidad cuenta con las siguientes facultades:<ul><li>🏛️ Ciencias Administrativas</li><li>🔧 Ingeniería</li><li>❤️ Ciencias de la Salud</li><li>🌐 Ciencias Sociales</li><li>📖 Educación</li><li>💻 Tecnologías de la Información</li></ul>",opts:["📚 Oferta Académica","🏠 Menú Principal"]},
+    {keys:["carreras","ofrece","programas","tercer nivel","qué carreras"],ans:"La universidad ofrece:<br><br>🖥️ <strong>Tecnologías:</strong> Tecnología en Desarrollo de Software, Tecnología en Marketing Digital<br>📜 <strong>Licenciaturas:</strong> Licenciatura en Educación, Licenciatura en Contabilidad<br>⚙️ <strong>Ingenierías:</strong> Ingeniería en Sistemas, Ingeniería Industrial, Ingeniería Civil<br><br>¿Te gustaría explorar una facultad específica?",opts:["📚 Oferta Académica"]},
+    {keys:["modalidad","virtual","presencial","semipresencial","línea","modalidades","modalidades de estudio"],ans:"La universidad ofrece modalidades de estudio <strong>Presencial</strong>, <strong>En línea</strong> e <strong>Híbrida</strong>, dependiendo del programa académico. ¿Deseas ver la oferta completa?",opts:["📚 Oferta Académica"]},
+    {keys:["requisitos","matricularme","matrícula","matricula","ingresar","ingreso"],ans:"Para matricularte necesitas: cédula o pasaporte, título de bachiller, certificado de votación (si aplica), fotografía y comprobante de pago (cuando corresponda). ¿Deseas conocer más del proceso?",opts:["📝 Admisiones"]},
+    {keys:["cuarto nivel","posgrado","maestría","maestria","especialización","especializacion","doctorado"],ans:"La universidad ofrece:<br><br>📜 <strong>Especializaciones:</strong> Gestión Pública<br>🏅 <strong>Maestrías:</strong> Educación, MBA, Ingeniería<br>🔬 <strong>Doctorados:</strong> Educación y Ciencias<br><br>¿Deseas ver la oferta completa de posgrado?",opts:["📚 Oferta Académica"]},
+    {keys:["requisitos maestría","requisitos maestria","estudiar maestría","estudiar maestria","ingreso posgrado"],ans:"Para una maestría se requiere: título universitario registrado en el SENESCYT, documentos personales, formulario de inscripción y entrevista (cuando corresponda). ¿Deseas más detalles?",opts:["📝 Admisiones"]},
+    {keys:["beca","beneficio","económico","economico","becas","situaciones","tipos de beca"],ans:"Existen becas por <strong>excelencia académica</strong>, <strong>situación socioeconómica</strong>, <strong>discapacidad</strong>, <strong>alto rendimiento deportivo</strong> y <strong>convenios institucionales</strong>. ¿Deseas información detallada?",opts:["🎓 Becas"]},
+    {keys:["cómo solicito beca","como solicito beca","solicitar beca","pedir beca","solicitud beca"],ans:"Para solicitar una beca debes completar la convocatoria correspondiente y presentar los documentos requeridos ante <strong>Bienestar Universitario</strong>. 📧 bienestar@unemi.edu.ec",opts:["🎓 Becas","🏠 Menú Principal"]},
+    {keys:["servicios","reciben los estudiantes","servicios estudiantiles","qué servicios"],ans:"Los estudiantes tienen acceso a: <strong>Biblioteca</strong>, tutorías, laboratorios, bienestar estudiantil, atención médica, atención psicológica, bolsa de empleo y plataforma virtual. ¿Necesitas más información?",opts:["🏛️ Universidad","🏠 Menú Principal"]},
+    {keys:["campus virtual","aula","plataforma","cómo ingreso","como ingreso","ingresar al campus"],ans:"Para ingresar al <strong>Campus Virtual</strong> visita <strong>campusvirtual.unemi.edu.ec</strong> con el usuario y contraseña asignados al matricularte. Para soporte: <strong>tic@unemi.edu.ec</strong>",opts:["📞 Contacto"]},
+    {keys:["titular","tesis","titulación","grado","proceso de titulación"],ans:"El proceso de titulación incluye: aprobar todas las asignaturas, cumplir prácticas o vinculación, aprobar la modalidad de titulación y entregar la documentación requerida. ¿Deseas detalles completos?",opts:["📝 Admisiones"]},
+    {keys:["costo","valor","precio","gratis","gratuita"],ans:"Al ser universidad pública, la matrícula en tercer nivel es <strong>gratuita</strong>. Los programas de posgrado tienen un costo diferenciado. ¿Necesitas más información?",opts:["📝 Admisiones","🎓 Becas"]},
+    {keys:["certificado","constancia","documento"],ans:"Los certificados académicos se solicitan en <strong>Secretaría General</strong> o a través del portal estudiantil. El tiempo estimado es de 3 a 5 días hábiles.",opts:["📞 Contacto"]},
+    {keys:["asesor","hablar","persona","humano","contactar"],ans:"¡Con gusto te conecto con un asesor! ¿Cuál es tu nombre completo para registrarte?",opts:[]},
+  ]
+};
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let state = {screen:'welcome', path:[], asesorStep:0, asesorData:{}};
+
+// ─────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────
+const $msg = ()=>document.getElementById('messages');
+const scroll = ()=>{const m=$msg();m.scrollTop=m.scrollHeight};
+const rmQR = ()=>document.querySelectorAll('.qrs').forEach(e=>e.remove());
+
+function addBot(html,opts=[],delay=650){
+  showTyping();
+  setTimeout(()=>{
+    hideTyping();
+    const wrap=document.createElement('div');wrap.className='msg-bot';
+    wrap.innerHTML=`<div class="b-av">🎓</div><div class="bubble-bot">${html}</div>`;
+    $msg().appendChild(wrap);
+    if(opts.length){
+      const qr=document.createElement('div');qr.className='qrs';
+      opts.forEach(o=>{
+        const b=document.createElement('button');b.className='qr';b.textContent=o;
+        b.onclick=()=>{rmQR();handleInput(o)};qr.appendChild(b);
+      });
+      $msg().appendChild(qr);
+    }
+    scroll();
+  },delay);
+}
+
+function addUser(text){
+  rmQR();
+  const w=document.createElement('div');w.className='msg-user';
+  w.innerHTML=`<div class="bubble-user">${text}</div>`;
+  $msg().appendChild(w);scroll();
+}
+
+function showTyping(){
+  const t=document.createElement('div');t.className='typing';t.id='typing';
+  t.innerHTML=`<div class="b-av">🎓</div><div class="tdots"><div class="td"></div><div class="td"></div><div class="td"></div></div>`;
+  $msg().appendChild(t);scroll();
+}
+function hideTyping(){const t=document.getElementById('typing');if(t)t.remove();}
+
+function setBreadcrumb(items){
+  const bc=document.getElementById('breadcrumb');
+  bc.innerHTML='';
+  items.forEach((item,i)=>{
+    if(i<items.length-1){
+      const s=document.createElement('span');s.className='bc-item';s.textContent=item;
+      s.onclick=()=>{addUser(item);handleInput(item)};bc.appendChild(s);
+      const sep=document.createElement('span');sep.className='bc-sep';sep.textContent='›';bc.appendChild(sep);
+    } else {
+      const s=document.createElement('span');s.className='bc-current';s.textContent=item;bc.appendChild(s);
+    }
+  });
+  const rb=document.createElement('button');rb.className='reset-btn';rb.textContent='↺ Reiniciar';
+  rb.onclick=()=>resetChat();bc.appendChild(rb);
+}
+
+// ─────────────────────────────────────────────
+// MAIN HANDLER
+// ─────────────────────────────────────────────
+function handleInput(text){
+  // ASESOR FLOW
+  if(state.screen==='asesor'){
+    handleAsesor(text);return;
+  }
+
+  const t=text.replace(/[🏛️📚📝🎓📖📞👤🔧❤️🌐⚖️💼🏗️📡🎨💻🎯🔭🏫📍🛎️🔬🏅📋📄🏆💛♿📊⭐]/g,'').trim();
+
+  // MENÚ PRINCIPAL items
+  if(t.includes('Universidad')){
+    state.screen='universidad';setBreadcrumb(['Inicio','Universidad']);
+    addBot(DATA.universidad.intro, DATA.universidad.opciones);return;
+  }
+  if(t.includes('Oferta Académica')||t.includes('Oferta')){
+    state.screen='oferta';setBreadcrumb(['Inicio','Oferta Académica']);
+    addBot('¿Qué nivel de estudios te interesa?', DATA.ofertaNiveles);return;
+  }
+  if(t.includes('Admisiones')){
+    state.screen='admisiones';setBreadcrumb(['Inicio','Admisiones']);
+    addBot(DATA.admisiones.intro, DATA.admisiones.opciones);return;
+  }
+  if(t.includes('Becas')||t.includes('beca')){
+    setBreadcrumb(['Inicio','Becas']);
+    addBot(DATA.becas,['💡 Cómo solicitar beca','🏠 Menú Principal']);return;
+  }
+  if(t.includes('Cómo solicitar beca')||t.includes('solicitar beca')||t.includes('solicitud beca')){
+    setBreadcrumb(['Inicio','Becas','Cómo Solicitar']);
+    addBot(DATA.solicitudBeca,['🎓 Becas','🏠 Menú Principal']);return;
+  }
+  if(t.includes('Cursos')){
+    setBreadcrumb(['Inicio','Cursos Gratuitos']);
+    addBot(DATA.educacionContinua,['🏠 Menú Principal']);return;
+  }
+  if(t.includes('Contacto')){
+    setBreadcrumb(['Inicio','Contacto']);
+    addBot(DATA.contacto,['🏠 Menú Principal']);return;
+  }
+  if(t.includes('Asesor')||t.includes('asesor')){
+    state.screen='asesor';state.asesorStep=1;state.asesorData={};
+    setBreadcrumb(['Inicio','Asesor Académico']);
+    addBot('¡Con gusto te conecto con un asesor! Necesito algunos datos. ¿Cuál es tu <strong>nombre completo</strong>?',[],500);return;
+  }
+
+  // UNIVERSIDAD sub-opciones
+  if(state.screen==='universidad'){
+    if(t.includes('Misión')||t.includes('Mision')) {addBot(DATA.universidad.mision,['🏛️ Universidad','🏠 Menú Principal']);return;}
+    if(t.includes('Visión')||t.includes('Vision')) {addBot(DATA.universidad.vision,['🏛️ Universidad','🏠 Menú Principal']);return;}
+    if(t.includes('Facultades')) {addBot(DATA.universidad.facultades,['🏛️ Universidad','🏠 Menú Principal']);return;}
+    if(t.includes('Sedes')) {addBot(DATA.universidad.sedes,['🏛️ Universidad','🏠 Menú Principal']);return;}
+    if(t.includes('Servicios')) {addBot(DATA.universidad.servicios,['🏛️ Universidad','🏠 Menú Principal']);return;}
+  }
+
+  // OFERTA niveles
+  if(t.includes('Tercer Nivel')||t.includes('3er')){
+    state.screen='tercerNivel';setBreadcrumb(['Inicio','Oferta Académica','Tercer Nivel']);
+    addBot('Selecciona una <strong>Facultad</strong> para ver sus carreras:', DATA.facultadesLista);return;
+  }
+  if(t.includes('Cuarto Nivel')||t.includes('4to')){
+    setBreadcrumb(['Inicio','Oferta Académica','Cuarto Nivel']);
+    addBot(DATA.cuartoNivel,['📚 Oferta Académica','🏠 Menú Principal']);return;
+  }
+  if(t.includes('Doctorado')){
+    setBreadcrumb(['Inicio','Oferta Académica','Doctorado']);
+    addBot(DATA.doctorado,['📚 Oferta Académica','🏠 Menú Principal']);return;
+  }
+  if(t.includes('Educación Continua')){
+    setBreadcrumb(['Inicio','Educación Continua']);
+    addBot(DATA.educacionContinua,['📚 Oferta Académica','🏠 Menú Principal']);return;
+  }
+
+  // FACULTAD → CARRERAS
+  const facKeys = Object.keys(DATA.carreras);
+  const facMatch = facKeys.find(f=>t.includes(f));
+  if(facMatch && (state.screen==='tercerNivel'||state.screen==='facultad'||state.screen==='oferta')){
+    state.screen='facultad';state.currentFac=facMatch;
+    setBreadcrumb(['Inicio','Oferta Académica','Tercer Nivel',facMatch]);
+    const d=DATA.carreras[facMatch];
+    const lista=d.lista.map(c=>`<li>${c}</li>`).join('');
+    addBot(`<strong>Facultad de ${facMatch}</strong><br><br>Carreras disponibles:<ul>${lista}</ul><br>⏱ Duración: ${d.dur}<br>📋 Modalidad: ${d.modal}<br>💰 Costo: ${d.costo}`,
+      ['📝 Quiero Inscribirme','📚 Oferta Académica','🏠 Menú Principal']);return;
+  }
+
+  // ADMISIONES sub
+  if(state.screen==='admisiones'){
+    if(t.includes('Requisitos')) {addBot(DATA.admisiones.requisitos,['📝 Admisiones','🏠 Menú Principal']);return;}
+    if(t.includes('inscripción')||t.includes('Inscripción')||t.includes('inscripcion')) {addBot(DATA.admisiones.inscripcion,['📝 Admisiones','🏠 Menú Principal']);return;}
+    if(t.includes('matrícula')||t.includes('Matrícula')||t.includes('matricula')) {addBot(DATA.admisiones.matricula,['📝 Admisiones','🏠 Menú Principal']);return;}
+    if(t.includes('titulación')||t.includes('Titulación')||t.includes('titulacion')) {addBot(DATA.admisiones.titulacion,['📝 Admisiones','🏠 Menú Principal']);return;}
+    if(t.includes('Documentos')) {addBot(DATA.admisiones.documentos,['📝 Admisiones','🏠 Menú Principal']);return;}
+    if(t.includes('Maestría')||t.includes('Maestria')||t.includes('maestría')||t.includes('maestria')) {addBot(DATA.admisiones.maestria,['📝 Admisiones','🏠 Menú Principal']);return;}
+    if(t.includes('Campus Virtual')||t.includes('campus virtual')||t.includes('Campus')||t.includes('Virtual')) {addBot(DATA.admisiones.campusVirtual,['📝 Admisiones','🏠 Menú Principal']);return;}
+  }
+
+  // INSCRIBIRSE
+  if(t.includes('Inscribirme')||t.includes('Inscribir')){
+    state.screen='asesor';state.asesorStep=1;state.asesorData={};
+    addBot('¡Excelente decisión! Voy a registrar tus datos para conectarte con un asesor de admisiones. ¿Cuál es tu <strong>nombre completo</strong>?',[],500);return;
+  }
+
+  // VOLVER AL MENÚ
+  if(t.includes('Menú Principal')||t.includes('Menu Principal')||t.includes('Inicio')){
+    state.screen='welcome';setBreadcrumb(['Inicio']);
+    addBot('Estás de vuelta en el <strong>Menú Principal</strong>. ¿En qué puedo ayudarte?', DATA.menuPrincipal);return;
+  }
+
+  // SALUDOS Y CONVERSACIÓN INFORMAL
+  const lower=text.toLowerCase();
+
+  const saludos=['hola','buenos días','buenos dias','buenas tardes','buenas noches','buenas','hey','hi','saludos','qué tal','que tal','buen día','buen dia'];
+  if(saludos.some(s=>lower===s||lower.startsWith(s+' ')||lower.endsWith(' '+s))){
+    const horas=new Date().getHours();
+    const momento=horas<12?'Buenos días':horas<18?'Buenas tardes':'Buenas noches';
+    addBot(`${momento}! 😊 Es un gusto saludarte. Soy <strong>MILI</strong>, tu asistente virtual de la <strong>UNEMI</strong>.<br><br>¿En qué puedo ayudarte hoy?`, DATA.menuPrincipal);return;
+  }
+
+  const despedidas=['adiós','adios','hasta luego','chao','chau','bye','nos vemos','hasta pronto','gracias y hasta luego'];
+  if(despedidas.some(s=>lower.includes(s))){
+    addBot('¡Hasta pronto! 👋 Fue un placer ayudarte. Si necesitas más información sobre la <strong>UNEMI</strong>, estaré aquí. ¡Que tengas un excelente día! 🎓',[]);return;
+  }
+
+  const agradecimientos=['gracias','muchas gracias','te lo agradezco','genial','perfecto','excelente','muy bien','ok gracias','listo gracias'];
+  if(agradecimientos.some(s=>lower.includes(s))){
+    addBot('¡Con mucho gusto! 😊 Es un placer servirte. ¿Hay algo más en lo que pueda ayudarte?', DATA.menuPrincipal);return;
+  }
+
+  const quienes=['quién eres','quien eres','qué eres','que eres','cómo te llamas','como te llamas','cuál es tu nombre','cual es tu nombre','eres un bot','eres humano'];
+  if(quienes.some(s=>lower.includes(s))){
+    addBot('Soy <strong>MILI</strong>, el asistente virtual de la <strong>Universidad Estatal de Milagro (UNEMI)</strong>. 🎓<br><br>Estoy aquí para ayudarte con información sobre admisiones, carreras, becas y mucho más. ¿En qué te puedo ayudar?', DATA.menuPrincipal);return;
+  }
+
+  const ayuda=['ayuda','ayúdame','ayudame','no sé','no se','qué puedes hacer','que puedes hacer','cómo funciona','como funciona','qué haces','que haces','opciones','menú','menu'];
+  if(ayuda.some(s=>lower.includes(s))){
+    addBot('¡Claro, estoy aquí para ayudarte! 🙋 Puedo informarte sobre:<br><br>🏛️ La institución UNEMI<br>📚 Carreras y programas académicos<br>📝 Proceso de admisiones e inscripción<br>🎓 Becas y beneficios<br>📖 Cursos gratuitos<br>📞 Datos de contacto<br><br>Selecciona una opción para comenzar:', DATA.menuPrincipal);return;
+  }
+
+  const como=['cómo estás','como estas','cómo te va','como te va','todo bien','todo bien?'];
+  if(como.some(s=>lower.includes(s))){
+    addBot('¡Muy bien, gracias por preguntar! 😄 Listo para ayudarte con todo lo que necesites sobre la <strong>UNEMI</strong>. ¿Qué información buscas?', DATA.menuPrincipal);return;
+  }
+
+  const si=['sí','si','claro','por supuesto','dale','de acuerdo','ok','está bien','esta bien'];
+  if(si.some(s=>lower===s)){
+    addBot('¡Perfecto! ¿Sobre cuál de estos temas deseas información?', DATA.menuPrincipal);return;
+  }
+
+  const no=['no','no gracias','no por ahora','tal vez después','tal vez despues'];
+  if(no.some(s=>lower===s||lower===s+'.')){
+    addBot('¡Entendido! Cuando necesites información sobre la UNEMI, aquí estaré. 😊 ¿Hay algo más en lo que te pueda ayudar?',['🏠 Menú Principal']);return;
+  }
+
+  // FAQ por palabras clave
+  for(const faq of DATA.faqKeys){
+    if(faq.keys.some(k=>lower.includes(k))){
+      const opts=[...faq.opts,'🏠 Menú Principal'];
+      addBot(faq.ans,opts);return;
+    }
+  }
+
+  // FALLBACK
+  addBot('Hmm, no estoy seguro de entender tu consulta. 🤔 Pero puedo ayudarte con estos temas sobre la <strong>UNEMI</strong>:', DATA.menuPrincipal);
+}
+
+// ASESOR FORM
+function handleAsesor(text){
+  const steps=[
+    {q:'¿Cuál es tu <strong>apellido</strong>?',key:'nombre'},
+    {q:'¿Cuál es tu <strong>correo electrónico</strong>?',key:'apellido'},
+    {q:'¿Cuál es tu número de <strong>celular</strong>?',key:'email'},
+    {q:'¿En qué <strong>ciudad</strong> te encuentras?',key:'celular'},
+    {q:'¿Qué <strong>carrera o programa</strong> te interesa?',key:'ciudad'},
+    {q:'¿Prefieres modalidad <strong>presencial, semipresencial o en línea</strong>?',key:'carrera',opts:['Presencial','Semipresencial','En línea']},
+    {done:true,key:'modalidad'}
+  ];
+  const step=steps[state.asesorStep-1];
+  state.asesorData[step.key]=text;
+  if(steps[state.asesorStep]?.done){
+    state.asesorData['modalidad']=text;
+    const d=state.asesorData;
+    addBot(`✅ <strong>¡Registro completado!</strong><br><br>📋 <strong>Resumen:</strong><ul><li>Nombre: ${d.nombre} ${d.apellido}</li><li>Correo: ${d.email}</li><li>Celular: ${d.celular}</li><li>Ciudad: ${d.ciudad}</li><li>Interés: ${d.carrera}</li><li>Modalidad: ${d.modalidad}</li></ul><br>Un asesor se comunicará contigo en <strong>máximo 24 horas hábiles</strong>. 🎓`,
+      ['🏠 Menú Principal'],800);
+    state.screen='welcome';return;
+  }
+  const next=steps[state.asesorStep];
+  state.asesorStep++;
+  addBot(next.q, next.opts||[], 500);
+}
+
+function sendMsg(){
+  const inp=document.getElementById('userInput');
+  const text=inp.value.trim();if(!text)return;
+  inp.value='';addUser(text);handleInput(text);
+}
+
+function resetChat(){
+  document.getElementById('messages').innerHTML='';
+  state={screen:'welcome',path:[],asesorStep:0,asesorData:{}};
+  startChat();
+}
+
+function startChat(){
+  setBreadcrumb(['Inicio']);
+  setTimeout(()=>{
+    addBot('¡Hola! 👋 Soy <strong>MILI</strong>, tu asistente virtual de la <strong>Universidad UNEMI</strong>. 🎓<br><br>Puedo ayudarte con <strong>admisiones, oferta académica, becas, carreras</strong> y mucho más.<br><br>¿Por dónde deseas comenzar?', DATA.menuPrincipal, 500);
+  },300);
+}
+
+startChat();
+</script>
+</body>
+</html>
